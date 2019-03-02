@@ -220,6 +220,22 @@ if size(pack, 2) == 2
     return;
 else
     if myHandles.Info.paused == false
+        str = myHandles.lstboxState.String;
+        havBeenCutTimes = myHandles.Info.havBeenCut;
+        % Clear lstbox cache silently, thus left some cache
+        %leftCacheLength =  20;
+        leftCacheLength = havBeenCutTimes + 20;
+        % clearCacheThreshold controls when to clear cache (frequency).
+        clearCacheThreshold = 1000;
+        lengthStr = length(str);
+        if lengthStr > havBeenCutTimes + leftCacheLength + clearCacheThreshold
+            % "+10" is unnecessary, mainly for keeping some system/network
+            % information.
+            if havBeenCutTimes + 5 < lengthStr - leftCacheLength
+                str(havBeenCutTimes + 10 : lengthStr - leftCacheLength) = [];
+                myHandles.lstboxState.String = str;
+            end
+        end
         updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
     end
 end
@@ -282,7 +298,7 @@ else
 end
 hold off;
 %
-if plotGapNum == 0 && get(myHandles.checkboxVitalDetect, 'Value')
+if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
     detectIndex = myHandles.Info.detectIndex;
     intered_data = interpolation_data(plotData);
     frequency = myHandles.Info.dataFre;
