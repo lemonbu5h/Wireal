@@ -269,8 +269,11 @@ myHandles.Info.plotData = plotData;
 myHandles.Info.plotGapNum = plotGapNum;
 realNum = plotMaxPack - plotGapNum;
 %realNum = plotMaxPack;
-%plotX = (1 : realNum) * myHandles.Info.everyPackSec;
-plotX = (1 : plotMaxPack) * myHandles.Info.everyPackSec;
+if (plotGapNum == 0)
+    plotX = (1 : plotMaxPack) * myHandles.Info.everyPackSec;
+else
+    plotX = (plotMaxPack - realNum + 1 : plotMaxPack) * myHandles.Info.everyPackSec;
+end
 
 % Set function is better since you still obtain focus.
 set(gcf, 'CurrentAxes', myHandles.axes1); 
@@ -289,11 +292,7 @@ if (myHandles.Info.plotMode == 'c')
     for i = 1 : size(plotData, 1)
         % Camera from right(oldest) to left(newest):
         %plot(plotX, plotData(i, realNum : -1 : 1));
-        if (plotGapNum == 0)
-            plot(plotX, plotData(i, 1 : realNum));
-        else
-            plot(plotX, [plotData(i, realNum + 1 : end), plotData(i, 1 : realNum)]);
-        end
+        plot(plotX, plotData(i, 1 : realNum));
         tag(:, i) = sprintf('Spatial Stream  %d', i);
     end
     legend(tag, 'Location', 'SouthEast');
@@ -302,12 +301,8 @@ if (myHandles.Info.plotMode == 'c')
 else
     splitIndex = myHandles.Info.splitIndex;
     % Camera from right(oldest) to left(newest):
-    %plot(plotX, plotData(splitIndex, realNum : -1 : 1), 'r');
-    if (plotGapNum == 0)        
-        plot(plotX, plotData(splitIndex, 1 : realNum), 'r');
-    else
-        plot(plotX, [plotData(splitIndex, realNum + 1 : end), plotData(splitIndex, 1 : realNum)], 'r');
-    end
+    %plot(plotX, plotData(splitIndex, realNum : -1 : 1), 'r');       
+    plot(plotX, plotData(splitIndex, 1 : realNum), 'r');
     legend(sprintf('Spatial Stream  %d', splitIndex), 'Location', 'SouthEast');
 end
 hold off;
