@@ -269,7 +269,8 @@ myHandles.Info.plotData = plotData;
 myHandles.Info.plotGapNum = plotGapNum;
 realNum = plotMaxPack - plotGapNum;
 %realNum = plotMaxPack;
-plotX = (1 : realNum) * myHandles.Info.everyPackSec;
+%plotX = (1 : realNum) * myHandles.Info.everyPackSec;
+plotX = (1 : plotMaxPack) * myHandles.Info.everyPackSec;
 
 % Set function is better since you still obtain focus.
 set(gcf, 'CurrentAxes', myHandles.axes1); 
@@ -286,14 +287,27 @@ hold on;
 if (myHandles.Info.plotMode == 'c')
     tag = strings(1, Ntx * Nrx);
     for i = 1 : size(plotData, 1)
-        plot(plotX, plotData(i, realNum : -1 : 1));
+        % Camera from right(oldest) to left(newest):
+        %plot(plotX, plotData(i, realNum : -1 : 1));
+        if (plotGapNum == 0)
+            plot(plotX, plotData(i, 1 : realNum));
+        else
+            plot(plotX, [plotData(i, realNum + 1 : end), plotData(i, 1 : realNum)]);
+        end
         tag(:, i) = sprintf('Spatial Stream  %d', i);
     end
     legend(tag, 'Location', 'SouthEast');
     %drawnow update;
+% else plotMode == 's'
 else
     splitIndex = myHandles.Info.splitIndex;
-    plot(plotX, plotData(splitIndex, realNum : -1 : 1), 'r');
+    % Camera from right(oldest) to left(newest):
+    %plot(plotX, plotData(splitIndex, realNum : -1 : 1), 'r');
+    if (plotGapNum == 0)        
+        plot(plotX, plotData(splitIndex, 1 : realNum), 'r');
+    else
+        plot(plotX, [plotData(splitIndex, realNum + 1 : end), plotData(splitIndex, 1 : realNum)], 'r');
+    end
     legend(sprintf('Spatial Stream  %d', splitIndex), 'Location', 'SouthEast');
 end
 hold off;
@@ -316,7 +330,10 @@ if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
     set(gcf, 'CurrentAxes', myHandles.axesRes);
     cla;
     hold on;
-    plot(plotX, res_data(detectIndex, realNum : -1 : 1), 'y');
+    % Camera from right to left:
+    %plot(plotX, res_data(detectIndex, realNum : -1 : 1), 'y');
+    % Camera from left to right:
+    plot(plotX, res_data(detectIndex, 1 : realNum), 'y');
     hold off;
     % Heartbeat
     heart_data = butterFilter_realtime(intered_data, frequency, 1);
@@ -330,7 +347,10 @@ if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
     set(gcf, 'CurrentAxes', myHandles.axesHeart);
     cla;
     hold on;
-    plot(plotX, heart_data(detectIndex, realNum : -1 : 1), 'g');
+    % Camera from right to left:
+    %plot(plotX, heart_data(detectIndex, realNum : -1 : 1), 'g');
+    % Camera from left to right:
+    plot(plotX, heart_data(detectIndex, 1 : realNum), 'g');
     hold off;
     myHandles.Info.shift_sec = shift_sec;
 end
