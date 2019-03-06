@@ -88,6 +88,7 @@ handles.Info = struct ...
     'axisLow', str2double(handles.editAxisLow.String), ...
     'axisHigh', str2double(handles.editAxisHigh.String), ...
     'timerPer', 0.05, ...
+    'cputime_begin2draw', -1, ...  % the cputime when data begin to draw
     'shift_sec', 0); % Arroximated shift seconds.
     %'waitedCSI', [], ...  % will be sent to get feature
     %'trainSet', {trainSet}, ...
@@ -170,6 +171,13 @@ filename = myHandles.Info.filename;
 if exist(filename, 'file') == 0
     return;
 end
+% When program runs at this point that means data have come
+% We can roughly say this moment is the beginning of running time
+% Be careful to initialize begin2draw time only once (preset defalt value
+% -1)
+if myHandles.Info.cputime_begin2draw == -1
+    myHandles.Info.cputime_begin2draw = cputime;
+end
 fhand = myHandles.Info.fileHandle;
 % -1 represents the default value of fileHandle
 if fhand == -1
@@ -200,6 +208,7 @@ recvSize = fileSize - cur;
 if (recvSize < thresholdSize) && (myHandles.Info.paused == false)
     updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));
     guidata(hObject, myHandles);
+    myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
     return;
 end
@@ -216,6 +225,7 @@ if size(pack, 2) == 2
         updateListbox(myHandles, sprintf('Received %d bytes but no valid contents...', recvSize));
     end
     guidata(hObject, myHandles);
+    myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
     return;
 else
@@ -283,6 +293,7 @@ set(gcf, 'CurrentAxes', myHandles.axes1);
 if (myHandles.Info.paused == true)
     guidata(hObject, myHandles);
     %toc;
+    myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
     return;
 end
 cla;
@@ -354,6 +365,7 @@ end
 % drawnow update;
 % store so other scopes can access the newest value
 guidata(hObject, myHandles);
+myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
 %toc;
 
 
@@ -438,6 +450,8 @@ end
 set(handles.staConnect, 'Visible', 'on');
 set(handles.staHz, 'Visible', 'on');
 set(handles.staMIMO, 'Visible', 'on');
+set(handles.staRunningTime, 'Visible', 'on');
+set(handles.textRunningTime, 'Visible', 'on');
 set(handles.dispConnect, 'Visible', 'on');
 set(handles.dispHz, 'Visible', 'on');
 set(handles.dispMIMO, 'Visible', 'on');
@@ -1252,6 +1266,7 @@ handles.Info.havntBeenStarted = true;
 handles.Info.plotGapNum = handles.Info.plotMaxSec * handles.Info.dataFre;
 handles.Info.curPos = 0;
 handles.Info.fileHandle = -1;
+handles.Info.cputime_begin2draw = -1;
 handles.Info.paused = false;
 handles.Info.shift_sec = 0;
 set(hObject, 'Visible', 'off');
@@ -1261,6 +1276,8 @@ set(handles.btnNextStream, 'Enable', 'on');
 set(handles.staConnect, 'Visible', 'off');
 set(handles.staHz, 'Visible', 'off');
 set(handles.staMIMO, 'Visible', 'off');
+set(handles.staRunningTime, 'Visible', 'off');
+set(handles.textRunningTime, 'Visible', 'off');
 set(handles.dispConnect, 'Visible', 'off');
 set(handles.dispHz, 'Visible', 'off');
 set(handles.dispMIMO, 'Visible', 'off');
@@ -1291,6 +1308,7 @@ set(handles.textResStatics, 'Visible', 'off');
 set(handles.textResStatics, 'String', '');
 set(handles.textHeartbeatStatics, 'Visible', 'off');
 set(handles.textHeartbeatStatics, 'String', '');
+set(handles.textRunningTime, 'String', '0 d  0 h  0 m  0 s');
 guidata(hObject, handles);
 
 
