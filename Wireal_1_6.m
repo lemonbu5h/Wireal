@@ -89,6 +89,7 @@ handles.Info = struct ...
     'axisHigh', str2double(handles.editAxisHigh.String), ...
     'timerPer', 0.05, ...
     'cputime_begin2draw', -1, ...  % the cputime when data begin to draw
+    'lstBoxCacheThreshold', 500, ...  % controls how often to clear listbox
     'shift_sec', 0); % Arroximated shift seconds.
     %'waitedCSI', [], ...  % will be sent to get feature
     %'trainSet', {trainSet}, ...
@@ -206,7 +207,7 @@ cur = myHandles.Info.curPos;
 fseek(fhand, cur, 'bof');
 recvSize = fileSize - cur;
 if (recvSize < thresholdSize) && (myHandles.Info.paused == false)
-    myHandles = clearLstBoxCache(myHandles, 1000);
+    myHandles = clearLstBoxCache(myHandles);
     updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));    
     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
@@ -223,6 +224,7 @@ myHandles.Info.curPos = cur;
 % If no valid data retrieved, pack will be cell(1, 2)
 if size(pack, 2) == 2
     if myHandles.Info.paused == false
+        myHandles = clearLstBoxCache(myHandles);
         updateListbox(myHandles, sprintf('Received %d bytes but no valid contents...', recvSize));
     end
     guidata(hObject, myHandles);
@@ -231,7 +233,7 @@ if size(pack, 2) == 2
     return;
 else
     if myHandles.Info.paused == false
-        myHandles = clearLstBoxCache(myHandles, 1000);
+        myHandles = clearLstBoxCache(myHandles);
         updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
     end
 end

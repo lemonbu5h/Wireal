@@ -1,16 +1,16 @@
-function [retHandles] = clearLstBoxCache(handles, clearCacheThreshold)
+function [retHandles] = clearLstBoxCache(handles)
 str = handles.lstboxState.String;
 havBeenCutTimes = handles.Info.havBeenCut;
 % Clear lstbox cache silently, thus left some cache
 %leftCacheLength =  20;
 leftCacheLength = havBeenCutTimes + 20;
 % clearCacheThreshold controls when to clear cache (frequency).
-%clearCacheThreshold = 1000;
+clearCacheThreshold = handles.Info.lstBoxCacheThreshold;
 lengthStr = length(str);
-if lengthStr > havBeenCutTimes + leftCacheLength + clearCacheThreshold
+if lengthStr > leftCacheLength + clearCacheThreshold
     % "+10" is unnecessary, mainly for keeping some system/network
     % information.
-    if havBeenCutTimes + 5 < lengthStr - leftCacheLength
+    if havBeenCutTimes + 10 < lengthStr - leftCacheLength
         str(havBeenCutTimes + 10 : lengthStr - leftCacheLength) = [];
         handles.lstboxState.String = str;
     end
