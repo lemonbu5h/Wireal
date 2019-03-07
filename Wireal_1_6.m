@@ -206,10 +206,11 @@ cur = myHandles.Info.curPos;
 fseek(fhand, cur, 'bof');
 recvSize = fileSize - cur;
 if (recvSize < thresholdSize) && (myHandles.Info.paused == false)
-    updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));
-    guidata(hObject, myHandles);
+    myHandles = clearLstBoxCache(myHandles, 1000);
+    updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));    
     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
+    guidata(hObject, myHandles);
     return;
 end
 [pack, cur] = read_bf_file_real_time(fhand, cur, recvSize, Ntx, Nrx);
@@ -230,22 +231,7 @@ if size(pack, 2) == 2
     return;
 else
     if myHandles.Info.paused == false
-        str = myHandles.lstboxState.String;
-        havBeenCutTimes = myHandles.Info.havBeenCut;
-        % Clear lstbox cache silently, thus left some cache
-        %leftCacheLength =  20;
-        leftCacheLength = havBeenCutTimes + 20;
-        % clearCacheThreshold controls when to clear cache (frequency).
-        clearCacheThreshold = 1000;
-        lengthStr = length(str);
-        if lengthStr > havBeenCutTimes + leftCacheLength + clearCacheThreshold
-            % "+10" is unnecessary, mainly for keeping some system/network
-            % information.
-            if havBeenCutTimes + 5 < lengthStr - leftCacheLength
-                str(havBeenCutTimes + 10 : lengthStr - leftCacheLength) = [];
-                myHandles.lstboxState.String = str;
-            end
-        end
+        myHandles = clearLstBoxCache(myHandles, 1000);
         updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
     end
 end
@@ -363,9 +349,9 @@ end
 %
 %pause(0.000001);% drawnow;
 % drawnow update;
+myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
 % store so other scopes can access the newest value
 guidata(hObject, myHandles);
-myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
 %toc;
 
 
@@ -547,20 +533,6 @@ else
 end
 set(handles.textDetectStreamIndex, 'String', sprintf('%d', handles.Info.detectIndex));
 guidata(hObject, handles);
-
-
-function updateListbox(handles, promptStr)
-% add item to listbox and update Value property of it(listbox)
-% Value property determine the position of scrollable bar
-if isempty(handles.lstboxState.String)
-    handles.lstboxState.String = {[datestr(datetime, handles.Info.dateFormat), ...
-        handles.Info.blankFormat, promptStr]};
-else
-    handles.lstboxState.String = [handles.lstboxState.String; ...
-        datestr(datetime, handles.Info.dateFormat), ...
-        handles.Info.blankFormat, promptStr];
-end
-handles.lstboxState.Value = size(handles.lstboxState.String, 1);
 
 
 % --- Executes on button press in checkboxTemp.
