@@ -157,7 +157,7 @@ if (myHandles.Info.havntBeenStarted == true)
     filename = fullfile(workingDir, timestamp);
     tcp_recv('csi_tcp_recv', address, port, filename);
     myHandles.Info.filename = filename;
-    updateListbox(myHandles, 'Ready for collecting data...');     
+    myHandles = updateListbox(myHandles, 'Ready for collecting data...');     
     myHandles.Info.havntBeenStarted = false;
     % update handles otherwise changed value is 
     % invisible outside this callback    
@@ -208,7 +208,7 @@ fseek(fhand, cur, 'bof');
 recvSize = fileSize - cur;
 if (recvSize < thresholdSize) && (myHandles.Info.paused == false)
     myHandles = clearLstBoxCache(myHandles);
-    updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));    
+    myHandles = updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));    
     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
     guidata(hObject, myHandles);
@@ -221,11 +221,11 @@ end
 
 % Update curPos
 myHandles.Info.curPos = cur;
-% If no valid data retrieved, pack will be cell(1, 2)
+% If no valid data retrieved, pack will be set to cell(1, 2)
 if size(pack, 2) == 2
     if myHandles.Info.paused == false
         myHandles = clearLstBoxCache(myHandles);
-        updateListbox(myHandles, sprintf('Received %d bytes but no valid contents...', recvSize));
+        myHandles = updateListbox(myHandles, sprintf('Received %d bytes but no valid contents...', recvSize));
     end
     guidata(hObject, myHandles);
     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
@@ -234,7 +234,7 @@ if size(pack, 2) == 2
 else
     if myHandles.Info.paused == false
         myHandles = clearLstBoxCache(myHandles);
-        updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
+        myHandles = updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
     end
 end
 % Extract CSI from raw data matrix.       
@@ -356,14 +356,6 @@ myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_beg
 guidata(hObject, myHandles);
 %toc;
 
-
-function ret = rate2StaticsStr(rate)
-stream_cnt = size(rate, 2);
-rate_str = strings(1, stream_cnt);
-for i = 1 : stream_cnt
-    rate_str(1, i) = sprintf('%0.2f(%d)  ', rate(:, i), i);
-end
-ret = cell2mat(rate_str);
     
     
 % --- Executes on button press in btnSelectCSIdir.
@@ -408,7 +400,7 @@ if handles.Info.haveSelectedCSIdir == false
             btn = questdlg(sprintf('Adapter "%s" is disconnected, do you want to continue to run in offline simulation mode?', adapterName), 'Continue or Retry', 'OK', 'Retry', 'Retry');
             switch btn
                 case 'OK'
-                    updateListbox(handles, 'Run in offline simulation mode successfully...');
+                    handles = updateListbox(handles, 'Run in offline simulation mode successfully...');
                     set(handles.uipanelNet, 'Visible', 'off');
                     break;
                 case 'Retry'
@@ -416,7 +408,7 @@ if handles.Info.haveSelectedCSIdir == false
             end
         else
             system([sprintf('netsh int ip set address "%s" static ', adapterName), server_ip]);
-            updateListbox(handles, ['IPv4 address has been set to ', server_ip, ' successfully...']);
+            handles = updateListbox(handles, ['IPv4 address has been set to ', server_ip, ' successfully...']);
             break;
         end
     end   
@@ -453,7 +445,7 @@ handles.Info.everyPackSec = 1 / dataFre;
 handles.Info.plotGapNum = plotMaxSec * dataFre;
 handles.Info.plotData = zeros(streamCnt, handles.Info.plotGapNum);
 
-updateListbox(handles, 'Waited socket connection...');
+handles = updateListbox(handles, 'Waited socket connection...');
 handles.dispConnect.String = sprintf('%s : %s', handles.Info.ip, handles.Info.port);
 handles.dispHz.String = handles.Info.dataFre;
 handles.dispMIMO.String = sprintf('Ntx = %d   Nrx = %d', handles.Info.Ntx, handles.Info.Nrx);
@@ -488,7 +480,7 @@ set(handles.btnContinue, 'Visible', 'on');
 set(hObject, 'Visible', 'off');
 set(handles.btnNextStream, 'Enable', 'off');
 handles.Info.paused = true;
-updateListbox(handles, 'Paused...');
+handles = updateListbox(handles, 'Paused...');
 %stop(handles.timer);
 %disp('stoped');
 guidata(hObject, handles);
@@ -503,7 +495,7 @@ set(handles.btnPause, 'Visible', 'on');
 set(hObject, 'Visible', 'off');
 set(handles.btnNextStream, 'Enable', 'on');
 handles.Info.paused = false;
-updateListbox(handles, 'Continue...');
+handles = updateListbox(handles, 'Continue...');
 %start(handles.timer);
 guidata(hObject, handles);
 
@@ -1227,14 +1219,14 @@ if exist(filename, 'file')
     handles.Info.lastCutNoFile = false;
     if handles.checkboxTemp.Value
         system(['del ', filename]);
-        updateListbox(handles, ['"', filename, '"', '  has been cut and deleted.']);
+        handles = updateListbox(handles, ['"', filename, '"', '  has been cut and deleted.']);
     else
-        updateListbox(handles, ['"', filename, '"', '  has been cut and saved.']);
+        handles = updateListbox(handles, ['"', filename, '"', '  has been cut and saved.']);
     end
     handles.Info.havBeenCut = havBeenCutTimes + 1;
 else
     handles.Info.lastCutNoFile = true;
-    updateListbox(handles, ['"', filename, '"', '  doesn''''t exist.']);
+    handles = updateListbox(handles, ['"', filename, '"', '  doesn''''t exist.']);
 end
 handles.Info.havntBeenStarted = true;
 handles.Info.plotGapNum = handles.Info.plotMaxSec * handles.Info.dataFre;
@@ -1312,7 +1304,7 @@ switch btn
                     continue;
                 else
                 	system(sprintf('netsh int ip set address "%s" dhcp', adapterName));
-                    updateListbox(handles, 'IPv4 address has been set to DHCP successfully...');
+                    handles = updateListbox(handles, 'IPv4 address has been set to DHCP successfully...');
                     break;
                 end
             end

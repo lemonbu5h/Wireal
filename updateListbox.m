@@ -1,4 +1,4 @@
-function updateListbox(handles, promptStr)
+function [retHandles] = updateListbox(handles, promptStr)
 % add item to listbox and update Value property of it(listbox)
 % Value property determine the position of scrollable bar
 if isempty(handles.lstboxState.String)
@@ -10,4 +10,5 @@ else
         handles.Info.blankFormat, promptStr];
 end
 handles.lstboxState.Value = size(handles.lstboxState.String, 1);
+retHandles = handles;
 end
