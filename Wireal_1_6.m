@@ -65,6 +65,9 @@ handles.Info = struct ...
     'fileHandle', -1, ...
     'curPos', 0, ...    % Current position of file read pointer.
     'paused', false, ...
+    'pausedPlotData', [], ...  % saved plotData when system is paused.
+    'pausedPlotX', [], ...  % saved plotX when system is paused. 
+    'pausedRealNum', -1, ...
     'dateFormat', 'mm/dd HH:MM:SS:FFF', ...
     'blankFormat', blanks(8), ...
     'haveSelectedCSIdir', false, ...
@@ -89,8 +92,8 @@ handles.Info = struct ...
     'axisHigh', str2double(handles.editAxisHigh.String), ...
     'timerPer', 0.05, ...
     'cputime_begin2draw', -1, ...  % the cputime when data begin to draw
-    'lstBoxCacheThreshold', 500, ...  % controls how often to clear listbox
-    'shift_sec', 0); % Arroximated shift seconds.
+    'lstBoxCacheThreshold', 500);  % controls how often to clear listbox
+    %'shift_sec', 0); % Arroximated shift seconds.
     %'waitedCSI', [], ...  % will be sent to get feature
     %'trainSet', {trainSet}, ...
     %'model', {model});
@@ -231,11 +234,12 @@ if size(pack, 2) == 2
     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
     return;
-else
-    if myHandles.Info.paused == false
-        myHandles = clearLstBoxCache(myHandles);
-        myHandles = updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
-    end
+% else
+%     
+%     if myHandles.Info.paused == false
+%         myHandles = clearLstBoxCache(myHandles);
+%         myHandles = updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
+%     end
 end
 % Extract CSI from raw data matrix.       
 array = adjust_CSI(pack, Ntx, Nrx, 30);
@@ -277,12 +281,21 @@ end
 set(gcf, 'CurrentAxes', myHandles.axes1); 
 %axes(myHandles.axes1);
 % axis([0, myHandles.Info.plotMaxSec, myHandles.Info.axisLow, myHandles.Info.axisHigh]);
-% If is in the pause state, don't draw anything.
+% If is in the pause state, only draw the pause time figure(why draw? for control).
 if (myHandles.Info.paused == true)
-    guidata(hObject, myHandles);
-    %toc;
-    myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
-    return;
+    if isempty(myHandles.Info.pausedPlotData)
+        myHandles.Info.pausedPlotData = plotData;
+        myHandles.Info.pausedPlotX = plotX;
+        myHandles.Info.pausedRealNum = realNum;
+    else
+        plotData = myHandles.Info.pausedPlotData;
+        plotX = myHandles.Info.pausedPlotX;
+        realNum = myHandles.Info.pausedRealNum;
+    end
+%     guidata(hObject, myHandles);
+%     %toc;
+%     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
+%     return;
 end
 cla;
 hold on;
@@ -305,13 +318,16 @@ else
     legend(sprintf('Spatial Stream  %d', splitIndex), 'Location', 'SouthEast');
 end
 hold off;
-%
-if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
+% For pause state control we can't use plotGapNum to determine if data is
+% full of the axis, cause at pause state plotGapNum belongs to real time
+% data
+%if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
+if (plotMaxPack == realNum) && get(myHandles.checkboxVitalDetect, 'Value')
     detectIndex = myHandles.Info.detectIndex;
     intered_data = interpolation_data(plotData);
     frequency = myHandles.Info.dataFre;
-    approximated_sec_pass = packNum / frequency;
-    shift_sec = myHandles.Info.shift_sec + approximated_sec_pass;
+    %approximated_sec_pass = packNum / frequency;
+    %shift_sec = myHandles.Info.shift_sec + approximated_sec_pass;
     % Respiration
     res_data = butterFilter_realtime(intered_data, frequency, 0);    
     res_rate = getVitalRate(res_data, frequency, 0);
@@ -346,7 +362,11 @@ if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
     % Camera from left to right:
     plot(plotX, heart_data(detectIndex, 1 : realNum), 'g');
     hold off;
-    myHandles.Info.shift_sec = shift_sec;
+    %myHandles.Info.shift_sec = shift_sec;
+end
+if myHandles.Info.paused == false
+	myHandles = clearLstBoxCache(myHandles);
+    myHandles = updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
 end
 %
 %pause(0.000001);% drawnow;
@@ -478,7 +498,7 @@ function btnPause_Callback(hObject, ~, handles)
 %set(handles.lstboxState, 'String', handles.lstboxState.String 'Paused ...']);
 set(handles.btnContinue, 'Visible', 'on');
 set(hObject, 'Visible', 'off');
-set(handles.btnNextStream, 'Enable', 'off');
+%set(handles.btnNextStream, 'Enable', 'off');
 handles.Info.paused = true;
 handles = updateListbox(handles, 'Paused...');
 %stop(handles.timer);
@@ -493,8 +513,11 @@ function btnContinue_Callback(hObject, ~, handles)
 % handles    structure with handles and user data (see GUIDATA)
 set(handles.btnPause, 'Visible', 'on');
 set(hObject, 'Visible', 'off');
-set(handles.btnNextStream, 'Enable', 'on');
+%set(handles.btnNextStream, 'Enable', 'on');
 handles.Info.paused = false;
+handles.Info.pausedPlotData = [];
+handles.Info.pausedPlotX = [];
+handles.Info.pausedRealNum = -1;
 handles = updateListbox(handles, 'Continue...');
 %start(handles.timer);
 guidata(hObject, handles);
@@ -1234,11 +1257,14 @@ handles.Info.curPos = 0;
 handles.Info.fileHandle = -1;
 handles.Info.cputime_begin2draw = -1;
 handles.Info.paused = false;
-handles.Info.shift_sec = 0;
+handles.Info.pausedPlotData = [];
+handles.Info.pausedPlotX = [];
+handles.Info.pausedRealNum = -1;
+%handles.Info.shift_sec = 0;
 set(hObject, 'Visible', 'off');
 set(handles.btnPause, 'Visible', 'off');
 set(handles.btnContinue, 'Visible', 'off');
-set(handles.btnNextStream, 'Enable', 'on');
+%set(handles.btnNextStream, 'Enable', 'on');
 set(handles.staConnect, 'Visible', 'off');
 set(handles.staHz, 'Visible', 'off');
 set(handles.staMIMO, 'Visible', 'off');
@@ -1296,7 +1322,7 @@ switch btn
         % If running in online mode...
         adapterName = handles.Info.adapterName;
         if strcmp(handles.uipanelNet.Visible, 'on') && handles.Info.haveSelectedCSIdir
-        	while true
+        	while (true)
                 %[~, check_connected_result] = system(sprintf('netsh interface show interface name="%s" | findstr "Connected"', adapterName));
                 [check_connected_status, ~] = system(sprintf('chcp 437 && netsh interface show interface name="%s" | findstr "Connected"', adapterName));                
                 if check_connected_status ~= 0
