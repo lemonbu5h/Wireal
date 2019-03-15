@@ -180,7 +180,9 @@ end
 % Be careful to initialize begin2draw time only once (preset defalt value
 % -1)
 if myHandles.Info.cputime_begin2draw == -1
-    myHandles.Info.cputime_begin2draw = cputime;
+    myHandles.Info.cputime_begin2draw = 0;
+    tic;
+    %myHandles.Info.cputime_begin2draw = cputime;
 end
 fhand = myHandles.Info.fileHandle;
 % -1 represents the default value of fileHandle
@@ -212,7 +214,8 @@ recvSize = fileSize - cur;
 if (recvSize < thresholdSize) && (myHandles.Info.paused == false)
     myHandles = clearLstBoxCache(myHandles);
     myHandles = updateListbox(myHandles, sprintf('No more than %d bytes!', thresholdSize));    
-    myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
+    myHandles.textRunningTime.String = sec2dhms(toc);    
+    %myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
     guidata(hObject, myHandles);
     return;
@@ -230,16 +233,11 @@ if size(pack, 2) == 2
         myHandles = clearLstBoxCache(myHandles);
         myHandles = updateListbox(myHandles, sprintf('Received %d bytes but no valid contents...', recvSize));
     end
+    myHandles.textRunningTime.String = sec2dhms(toc);
+    %myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     guidata(hObject, myHandles);
-    myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);
     %toc;
     return;
-% else
-%     
-%     if myHandles.Info.paused == false
-%         myHandles = clearLstBoxCache(myHandles);
-%         myHandles = updateListbox(myHandles, sprintf('Received %d bytes...', recvSize));
-%     end
 end
 % Extract CSI from raw data matrix.       
 array = adjust_CSI(pack, Ntx, Nrx, 30);
@@ -292,10 +290,6 @@ if (myHandles.Info.paused == true)
         plotX = myHandles.Info.pausedPlotX;
         realNum = myHandles.Info.pausedRealNum;
     end
-%     guidata(hObject, myHandles);
-%     %toc;
-%     myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
-%     return;
 end
 cla;
 hold on;
@@ -322,7 +316,7 @@ hold off;
 % full of the axis, cause at pause state plotGapNum belongs to real time
 % data
 %if (plotGapNum == 0) && get(myHandles.checkboxVitalDetect, 'Value')
-if (plotMaxPack == realNum) && get(myHandles.checkboxVitalDetect, 'Value')
+if get(myHandles.checkboxVitalDetect, 'Value') && (plotMaxPack == realNum)
     detectIndex = myHandles.Info.detectIndex;
     intered_data = interpolation_data(plotData);
     frequency = myHandles.Info.dataFre;
@@ -371,7 +365,8 @@ end
 %
 %pause(0.000001);% drawnow;
 % drawnow update;
-myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
+myHandles.textRunningTime.String = sec2dhms(toc);
+%myHandles.textRunningTime.String = sec2dhms(cputime - myHandles.Info.cputime_begin2draw);    
 % store so other scopes can access the newest value
 guidata(hObject, myHandles);
 %toc;
