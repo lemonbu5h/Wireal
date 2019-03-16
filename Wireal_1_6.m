@@ -107,16 +107,6 @@ handles.timer = timer ...
     'StartFcn', {@startFcn_Callback, hObject}, ...
     'TimerFcn', {@timerFcn_Callback, hObject});
 
-set(gcf, 'units', 'normalized', 'outerposition', [0 0 1 1]);
-%handles.figure1.Visible = 'on';
-%FigH = handles.figure1;
-%FigPos = get(FigH, 'Position');
-%WindowAPI(FigH, 'Position', FigPos, 2);
-%WindowAPI(FigH, 'maximize');
-%WindowAPI(FigH, 'SetFocus');
-%pause(0.2);
-%handles.figure1 = FigH;
-
 set(gcf, 'CurrentAxes', handles.axes1); 
 axis([0, handles.Info.plotMaxSec, handles.Info.axisLow, handles.Info.axisHigh]);
 set(gcf, 'CurrentAxes', handles.axesRes);
@@ -147,6 +137,13 @@ function varargout = Wireal_1_6_OutputFcn(~, ~, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+%set(gcf, 'units', 'normalized', 'outerposition', [0 0 1 1]);
+handles.figure1.Visible = 'on';
+FigH = handles.figure1;
+FigPos = get(FigH, 'Position');
+WindowAPI(FigH, 'Position', FigPos, 2);
+WindowAPI(FigH, 'maximize');
+WindowAPI(FigH, 'SetFocus');
 
 
 function startFcn_Callback(~, ~, hObject)
