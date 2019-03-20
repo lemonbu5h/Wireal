@@ -51,11 +51,11 @@ function Wireal_1_6_OpeningFcn(hObject, ~, handles, varargin)
 % varargin   command line arguments to Wireal_1_6 (see VARARGIN)
 % Choose default command line output for Wireal_1_6
 
-% For Application Logo.
-javaFrame = get(hObject,'JavaFrame');
+%set(gcf, 'units', 'normalized', 'outerposition', [0 0 1 1]);
+useWindowAPI2Maximize(handles.figure1);
+% For Application Logo(top left).
+javaFrame = get(hObject,'javaFrame');
 javaFrame.setFigureIcon(javax.swing.ImageIcon('logo.jpg'));
-handles.output = hObject;
-% 
 %load('svmModel.mat');
 handles.Info = struct ...
    ('havntBeenStarted', true, ...
@@ -107,43 +107,38 @@ handles.timer = timer ...
     'StartFcn', {@startFcn_Callback, hObject}, ...
     'TimerFcn', {@timerFcn_Callback, hObject});
 
-set(gcf, 'CurrentAxes', handles.axes1); 
-axis([0, handles.Info.plotMaxSec, handles.Info.axisLow, handles.Info.axisHigh]);
-set(gcf, 'CurrentAxes', handles.axesRes);
-% axis([0, handles.Info.plotMaxSec, handles.Info.axisLow, handles.Info.axisHigh]);
-xlim([0 handles.Info.plotMaxSec]);
-xticks('auto');
-% ylim([20 27]);
-yticks('auto');
-set(gcf, 'CurrentAxes', handles.axesHeart);
-% axis([0, handles.Info.plotMaxSec, handles.Info.axisLow, handles.Info.axisHigh]);
-xlim([0 handles.Info.plotMaxSec]);
-xticks('auto');
-% ylim([-5 * 1e32, 5 * 1e32]);
-% ylim([-1 * handles.Info.axisHigh handles.Info.axisHigh]);
-yticks('auto');
+%set(gcf, 'CurrentAxes', handles.axes1);
+%handles.figure1.CurrentAxes = handles.axes1;
+axis(handles.axes1, [0, handles.Info.plotMaxSec, handles.Info.axisLow, handles.Info.axisHigh]);
+%set(gcf, 'CurrentAxes', handles.axesRes);
+%handles.figure1.CurrentAxes = handles.axesRes;
+xlim(handles.axesRes, [0 handles.Info.plotMaxSec]);
+xticks(handles.axesRes, 'auto');
+yticks(handles.axesRes, 'auto');
+%set(gcf, 'CurrentAxes', handles.axesHeart);
+%handles.figure1.CurrentAxes = handles.axesHeart;
+xlim(handles.axesHeart, [0 handles.Info.plotMaxSec]);
+xticks(handles.axesHeart, 'auto');
+yticks(handles.axesHeart, 'auto');
+handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
-
 % UIWAIT makes Wireal_1_6 wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
-    
+%uiwait(handles.figure1);
+
+
+
 % --- Outputs from this function are returned to the command line.
 function varargout = Wireal_1_6_OutputFcn(~, ~, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 % Get default command line output from handles structure
 varargout{1} = handles.output;
 %set(gcf, 'units', 'normalized', 'outerposition', [0 0 1 1]);
-handles.figure1.Visible = 'on';
-FigH = handles.figure1;
-FigPos = get(FigH, 'Position');
-WindowAPI(FigH, 'Position', FigPos, 2);
-WindowAPI(FigH, 'maximize');
-WindowAPI(FigH, 'SetFocus');
+useWindowAPI2Maximize(handles.figure1);
+
 
 
 function startFcn_Callback(~, ~, hObject)
@@ -273,7 +268,8 @@ else
 end
 
 % Set function is better since you still obtain focus.
-set(gcf, 'CurrentAxes', myHandles.axes1); 
+%set(gcf, 'CurrentAxes', myHandles.axes1); 
+%myHandles.figure1.CurrentAxes = myHandles.axes1;
 %axes(myHandles.axes1);
 % axis([0, myHandles.Info.plotMaxSec, myHandles.Info.axisLow, myHandles.Info.axisHigh]);
 % If is in the pause state, only draw the pause time figure(why draw? for control).
@@ -288,27 +284,27 @@ if (myHandles.Info.paused == true)
         realNum = myHandles.Info.pausedRealNum;
     end
 end
-cla;
-hold on;
+cla(myHandles.axes1);
+hold(myHandles.axes1, 'on');
 if (myHandles.Info.plotMode == 'c')
     tag = strings(1, Ntx * Nrx);
     for i = 1 : size(plotData, 1)
         % Camera from right(oldest) to left(newest):
         %plot(plotX, plotData(i, realNum : -1 : 1));
-        plot(plotX, plotData(i, 1 : realNum));
+        plot(myHandles.axes1, plotX, plotData(i, 1 : realNum));
         tag(:, i) = sprintf('Spatial Stream  %d', i);
     end
-    legend(tag, 'Location', 'SouthEast');
+    legend(myHandles.axes1, tag, 'Location', 'SouthEast');
     %drawnow update;
 % else plotMode == 's'
 else
     splitIndex = myHandles.Info.splitIndex;
     % Camera from right(oldest) to left(newest):
     %plot(plotX, plotData(splitIndex, realNum : -1 : 1), 'r');       
-    plot(plotX, plotData(splitIndex, 1 : realNum), 'r');
-    legend(sprintf('Spatial Stream  %d', splitIndex), 'Location', 'SouthEast');
+    plot(myHandles.axes1, plotX, plotData(splitIndex, 1 : realNum), 'r');
+    legend(myHandles.axes1, sprintf('Spatial Stream  %d', splitIndex), 'Location', 'SouthEast');
 end
-hold off;
+hold(myHandles.axes1, 'off');
 % For pause state control we can't use plotGapNum to determine if data is
 % full of the axis, cause at pause state plotGapNum belongs to real time
 % data
@@ -328,14 +324,15 @@ if get(myHandles.checkboxVitalDetect, 'Value') && (plotMaxPack == realNum)
     selected_res_rate = res_rate(1, detectIndex);
     myHandles.textResRateValue.String = sprintf('%d', selected_res_rate);
     myHandles.textResRateValue.ForegroundColor = 'red';
-    set(gcf, 'CurrentAxes', myHandles.axesRes);
-    cla;
-    hold on;
+    %set(gcf, 'CurrentAxes', myHandles.axesRes);
+    %myHandles.figure1.CurrentAxes = myHandles.axesRes;
+    cla(myHandles.axesRes);
+    hold(myHandles.axesRes, 'on');
     % Camera from right to left:
     %plot(plotX, res_data(detectIndex, realNum : -1 : 1), 'y');
     % Camera from left to right:
-    plot(plotX, res_data(detectIndex, 1 : realNum), 'y');
-    hold off;
+    plot(myHandles.axesRes, plotX, res_data(detectIndex, 1 : realNum), 'y');
+    hold(myHandles.axesRes, 'off');
     % Heartbeat
     heart_data = butterFilter_realtime(intered_data, frequency, 1);
     heart_rate = getVitalRate(heart_data, frequency, 1); 
@@ -345,14 +342,15 @@ if get(myHandles.checkboxVitalDetect, 'Value') && (plotMaxPack == realNum)
     selected_heart_rate = heart_rate(1, detectIndex);
     myHandles.textHeartbeatRateValue.String = sprintf('%d', selected_heart_rate);
     myHandles.textHeartbeatRateValue.ForegroundColor = 'red'; 
-    set(gcf, 'CurrentAxes', myHandles.axesHeart);
-    cla;
-    hold on;
+    %set(gcf, 'CurrentAxes', myHandles.axesHeart);
+    %myHandles.figure1.CurrentAxes = myHandles.axesHeart;
+    cla(myHandles.axesHeart);
+    hold(myHandles.axesHeart, 'on');
     % Camera from right to left:
     %plot(plotX, heart_data(detectIndex, realNum : -1 : 1), 'g');
     % Camera from left to right:
-    plot(plotX, heart_data(detectIndex, 1 : realNum), 'g');
-    hold off;
+    plot(myHandles.axesHeart, plotX, heart_data(detectIndex, 1 : realNum), 'g');
+    hold(myHandles.axesHeart, 'off');
     %myHandles.Info.shift_sec = shift_sec;
 end
 if myHandles.Info.paused == false
@@ -689,25 +687,15 @@ else
     handles.editMaxSec.String = sprintf('%d', res);
     handles.Info.plotMaxSec = res;
 end
-set(gcf, 'CurrentAxes', handles.axes1);
-xlim([0 res]);
-if res > 30
-    xticks('auto');
-    set(gcf, 'CurrentAxes', handles.axesRes);
-    xlim([0 res]);
-    xticks('auto');
-    set(gcf, 'CurrentAxes', handles.axesHeart);
-    xlim([0 res]);
-    xticks('auto');
-else
-    xticks(0 : 1 : res);
-    set(gcf, 'CurrentAxes', handles.axesRes);
-    xlim([0 res]);
-    xticks(0 : 2 : res);
-    set(gcf, 'CurrentAxes', handles.axesHeart);
-    xlim([0 res]);
-    xticks(0 : 2 : res);
-end
+%handles.figure1.CurrentAxes = handles.axes1;
+xlim(handles.axes1, [0 res]);
+xticks(handles.axes1, 'auto');
+%handles.figure1.CurrentAxes = handles.axesRes;
+xlim(handles.axesRes, [0 res]);
+xticks(handles.axesRes, 'auto');
+%handles.figure1.CurrentAxes = handles.axesHeart;
+xlim(handles.axesHeart, [0 res]);
+xticks(handles.axesHeart, 'auto');
 guidata(hObject, handles);
 
 
@@ -912,8 +900,9 @@ res = str2double(editAxisLow);
 axisHigh = handles.Info.axisHigh;
 if (isnan(res) || res < 0 || res > axisHigh)
     %warndlg('Invalid Axis Lower Bound : Must be a decimal above or equal 0 and less than the upper bound of axis', 'WARNING');
-	errordlg('Invalid Axis Lower Bound : Must be a decimal above or equal 0 and less than the upper bound of axis.', 'Input Error');
+	errordlg('Invalid Axis Lower Bound : Must be a decimal above or equal 0 and less than the upper bound of axis.', 'Input Error', 'nonmodal');
     handles.editAxisLow.String = handles.Info.axisLow;
+    res = handles.Info.axisLow;
 else
     % When input is a decimal but its decimal part only zero, reducing
     % decimal part.
@@ -922,21 +911,9 @@ else
     end
     handles.Info.axisLow = res;
 end
-set(gcf, 'CurrentAxes', handles.axes1);
-y_tick = 5;
-ylim([res handles.Info.axisHigh]);
-if handles.Info.axisHigh - res < y_tick
-    yticks('auto');
-else
-    yticks(res : 5 : handles.Info.axisHigh);
-end
-% set(gcf, 'CurrentAxes', handles.axesRes);
-% ylim([res handles.Info.axisHigh]);
-% yticks('auto');
-% set(gcf, 'CurrentAxes', handles.axesHeart);
-% ylim([res handles.Info.axisHigh]);
-% yticks('auto');
-% axis([0, handles.Info.plotMaxSec, res, axisHigh]);
+%handles.figure1.CurrentAxes = handles.axes1;
+ylim(handles.axes1, [res axisHigh]);
+yticks(handles.axes1, 'auto');
 guidata(hObject, handles);
   
            
@@ -967,6 +944,7 @@ if (isnan(res) || res <= 0 || res < axisLow)
     %warndlg('Invalid Axis Upper Bound : Must be a positive decimal and greater than the lower bound of axis', 'WARNING');
     errordlg('Invalid Axis Upper Bound : Must be a positive decimal and greater than the lower bound of axis.', 'Input Error');
     handles.editAxisHigh.String = handles.Info.axisHigh;
+    res = handles.Info.axisHigh;
 else
     % When input is a decimal but its decimal part only zero, reducing
     % decimal part.
@@ -975,21 +953,10 @@ else
     end
     handles.Info.axisHigh = res;
 end
-set(gcf, 'CurrentAxes', handles.axes1);
-y_tick = 5;
-ylim([handles.Info.axisLow res]);
-if res - handles.Info.axisLow < y_tick
-    yticks('auto');
-else
-    yticks(handles.Info.axisLow : 5 : res);
-end
-% set(gcf, 'CurrentAxes', handles.axesRes);
-% ylim([handles.Info.axisLow res]);
-% yticks('auto');
-% set(gcf, 'CurrentAxes', handles.axesHeart);
-% ylim([handles.Info.axisLow res]);
-% yticks('auto');
-% axis([0, handles.Info.plotMaxSec, axisLow, res]);
+%set(gcf, 'CurrentAxes', handles.axes1);
+%handles.figure1.CurrentAxes = handles.axes1;
+ylim(handles.axes1, [axisLow res]);
+yticks(handles.axes1, 'auto');
 guidata(hObject, handles);
 
 
@@ -1212,12 +1179,15 @@ function btnCut_Callback(hObject, ~, handles)
 tcp_recv('csi_tcp_recv');
 fclose('all');
 stop(handles.timer);
-set(gcf, 'CurrentAxes', handles.axes1);
-cla;
-set(gcf, 'CurrentAxes', handles.axesRes);
-cla;
-set(gcf, 'CurrentAxes', handles.axesHeart);
-cla;
+%set(gcf, 'CurrentAxes', handles.axes1);
+%handles.figure1.CurrentAxes = handles.axes1;
+cla(handles.axes1);
+%set(gcf, 'CurrentAxes', handles.axesRes);
+%handles.figure1.CurrentAxes = handles.axesRes;
+cla(handles.axesRes);
+%set(gcf, 'CurrentAxes', handles.axesHeart);
+%handles.figure1.CurrentAxes = handles.axesHeart;
+cla(handles.axesHeart);
 filename = handles.Info.filename;
 havBeenCutTimes = handles.Info.havBeenCut;
 if havBeenCutTimes == 0
