@@ -1,4 +1,3 @@
-% CHENYU ZHANG <303223118@qq.com>
 % Used for deleting invalid pack(inf value) 
 function ret = interpolation_data(pack)
 ret = zeros(size(pack));

@@ -1,4 +1,3 @@
-% CHENYU ZHANG <303223118@qq.com>
 function ret = butterFilter_realtime(pack, frequency, mode)
 fs = frequency; % Sample frequency
 fp = [1, 1.5]; % Pass frequency

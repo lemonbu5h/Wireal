@@ -1,4 +1,3 @@
-% CHENYU ZHANG <303223118@qq.com>
 function package = adjust_CSI(rawData, Ntx, Nrx, num_subcarrier)
 data_length = size(rawData, 1);
 package = zeros(Ntx * Nrx * num_subcarrier, data_length);

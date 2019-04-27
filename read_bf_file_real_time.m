@@ -1,4 +1,4 @@
-% Polished by Chenyu Zhang. <303223118@qq.com>
+% Polished by lemonbu5h
 % Added support for real time system.
 %READ_BF_FILE Reads in a file of beamforming feedback logs.
 function [ret, cur] = read_bf_file_real_time(fhand, cur, recvSize, Num_Tx, Num_Rx)
