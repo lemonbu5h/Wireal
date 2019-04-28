@@ -15,6 +15,6 @@ Wireal
 - **Vital Signs Detection** - Help you detect breath rate and heartbeat rate.
 
 ## License
-- [linux-80211n-csitool-supplementary/*]() is under the MIT license. 
+- [linux-80211n-csitool-supplementary/*](http://dhalperi.github.io/linux-80211n-csitool/faq.html) is under the MIT license. 
 - [WindowAPI/*](https://www.mathworks.com/matlabcentral/fileexchange/31437-windowapi) is under the 2-Clause BSD License.
 - **Wireal** is under the GNU Affero General Public License v3.0.
